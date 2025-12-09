@@ -26,7 +26,13 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = [
   "http://localhost:3000",  // dev
-  "http://cartevv.com"      // prod
+  "http://cartevv.com",      // prod
+  "https://cartevv.com", 
+  "http://www.cartevv.com",      // prod
+  "https://www.cartevv.com",     // prod
+  'http://51.178.54.99',
+  'https://51.178.54.99',
+      // prod
 ];
 
 app.use(cors({
