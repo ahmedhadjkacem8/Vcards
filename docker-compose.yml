@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     build: ./backend
@@ -5,20 +7,22 @@ services:
     restart: unless-stopped
     env_file: ./backend/.env
     ports:
-      - "4000:4000"
+      - "4000:4000" # accessible uniquement via Nginx ou IP publique
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
       - db
-    command: sh -c "until nc -z db 3306; do echo 'Waiting for MySQL...'; sleep 2; done; npm start"
+    command: >
+      sh -c "until nc -z db 3306; do echo 'Waiting for MySQL...'; sleep 2; done; npm start"
 
   frontend:
     build: ./frontend
     container_name: frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
     environment:
+      # Le frontend doit pointer vers le backend via le nom de service interne dans Docker Compose
       VITE_API_URL: "http://backend:4000"
 
   db:
@@ -29,10 +33,10 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: db_vcards
     ports:
-      - "3307:3306"
+      - "3306:3306"  # 3306 standard pour MySQL
     volumes:
       - db_data:/var/lib/mysql
-      - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql  # import automatique
+      - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
