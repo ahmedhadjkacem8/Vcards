@@ -1,0 +1,52 @@
+services:
+  backend:
+    build: ./backend
+    container_name: backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+    command: sh -c "until nc -z db 3306; do echo 'Waiting for MySQL...'; sleep 2; done; npm start"
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: "http://backend:4000"
+
+  db:
+    image: mysql:8.0
+    container_name: vcards-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_vcards
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql  # import automatique
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: vcards-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
