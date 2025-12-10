@@ -89,7 +89,7 @@ const Admin = () => {
         const token = localStorage.getItem("token");
       if (!token) throw new Error("Non authentifié");
             const res = await fetch(`${API_URL}/profiles/${profileId}`, {
-              method: "PATCH",
+              method: "PUT",
         headers: {
           "Content-Type": "application/json",
           // This header is crucial for authentication

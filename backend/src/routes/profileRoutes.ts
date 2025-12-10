@@ -40,7 +40,7 @@ router.get("/:id/social-links", getSocialLinks);
 router.get("/:id/gallery", getGallery);
 
 // ---- ROUTE CATCH-ALL EN DERNIER ----
-router.patch("/:id", authenticate, updateProfile);
+router.put("/:id", authenticate, updateProfile);
 
 
 router.post("/:id/emails", authenticate, addEmail);
