@@ -25,6 +25,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = [
+  "http://localhost",
   "http://localhost:3000",  // dev
   "http://cartevv.com",      // prod
   "https://cartevv.com", 
