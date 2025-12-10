@@ -58,7 +58,7 @@ export const addEmployee = async (req: Request, res: Response) => {
     res.status(201).json(newEmployee);
   } catch (error: any) {
     await t.rollback();
-    console.error("❌ ERROR ADDING EMPLOYEE:", error);
+    //console.error("❌ ERROR ADDING EMPLOYEE:", error);
     res.status(500).json({
       message: "Server error",
       error: error.message,

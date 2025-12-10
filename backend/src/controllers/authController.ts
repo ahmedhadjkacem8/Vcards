@@ -36,8 +36,8 @@ export const signup = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" });
 
     // ✅ Log du token
-    console.log("[SIGNUP] User created:", user.email);
-    console.log("[SIGNUP] Token:", token);
+    //console.log("[SIGNUP] User created:", user.email);
+    //console.log("[SIGNUP] Token:", token);
 
     // Do not create a profile here — profile will be created later from the frontend
     res.json({ token, user: { id: user.id, email: user.email } });
@@ -77,8 +77,8 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: "1d" }
     );
 
-    console.log("[LOGIN] User logged in:", user.email);
-    console.log("[LOGIN] Token:", token);
+    //console.log("[LOGIN] User logged in:", user.email);
+    //console.log("[LOGIN] Token:", token);
 
     const { password: _, ...userData } = user.get({ plain: true });
 
@@ -162,11 +162,11 @@ export const session = async (req: Request, res: Response) => {
     });
   } catch (err: unknown) {
     // Token verification failed (e.g., expired, malformed).
-    if (err instanceof Error) {
-      console.error("[SESSION] Token verification failed:", err.message);
-    } else {
-      console.error("[SESSION] Unknown error during token verification:", err);
-    }
+    // if (err instanceof Error) {
+    //   console.error("[SESSION] Token verification failed:", err.message);
+    // } else {
+    //   console.error("[SESSION] Unknown error during token verification:", err);
+    // }
     return res.json({ user: null, message: "Invalid or expired session" });
   }
 };

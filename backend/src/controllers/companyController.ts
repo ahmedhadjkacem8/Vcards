@@ -33,7 +33,7 @@ export const createCompany = async (req: Request, res: Response) => {
       created_by: user.id,
     });
 
-    console.log("Company created:", company.get({ plain: true }));
+    //console.log("Company created:", company.get({ plain: true }));
 
     // Création de l'employé (créateur = owner)
     const employeeData = {
@@ -46,7 +46,7 @@ export const createCompany = async (req: Request, res: Response) => {
       is_active: true,
     };
 
-    console.log("Creating CompanyEmployee:", employeeData);
+    //console.log("Creating CompanyEmployee:", employeeData);
 
     const employee = await CompanyEmployee.create(employeeData);
 
@@ -56,9 +56,9 @@ export const createCompany = async (req: Request, res: Response) => {
     let message = "Erreur serveur";
     if (error instanceof Error) {
       message = error.message;
-      console.error("CREATE COMPANY ERROR:", error.message);
+      //console.error("CREATE COMPANY ERROR:", error.message);
     } else {
-      console.error("CREATE COMPANY ERROR:", error);
+      //console.error("CREATE COMPANY ERROR:", error);
     }
 
     res.status(500).json({ message, error: String(error) });
@@ -84,7 +84,7 @@ export const getMyCompanies = async (req: Request, res: Response) => {
 
     res.json(companies);
   } catch (error) {
-    console.error("getMyCompanies error:", error);
+    //console.error("getMyCompanies error:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
@@ -92,7 +92,7 @@ export const getMyCompanies = async (req: Request, res: Response) => {
 export const getAllCompanies = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
-    console.log("User role:", user.role);
+    //console.log("User role:", user.role);
     if (user.role !== "admin") {
       return res.status(403).json({ message: "Accès refusé" });
     }
@@ -103,7 +103,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
 
     res.json(companies);
   } catch (error) {
-    console.error("getAllCompanies error:", error);
+    //console.error("getAllCompanies error:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 };
