@@ -18,7 +18,7 @@ const Dashboard = () => {
   // -----------------------
   const fetchSession = async () => {
     const token = localStorage.getItem("token");
-    console.log("[DASHBOARD] token localStorage:", token);
+    //console.log("[DASHBOARD] token localStorage:", token);
 
     if (!token) {
       navigate("/auth");
@@ -34,14 +34,14 @@ const Dashboard = () => {
       });
 
       if (res.status === 401) {
-        console.log("[DASHBOARD] Token invalide → redirection");
+        //console.log("[DASHBOARD] Token invalide → redirection");
         localStorage.removeItem("token");
         navigate("/auth");
         return;
       }
 
       const data = await res.json();
-      console.log("[DASHBOARD] user session:", data.user);
+      //console.log("[DASHBOARD] user session:", data.user);
 
       setUser(data.user);
 

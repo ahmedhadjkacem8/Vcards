@@ -40,8 +40,8 @@ const Auth = ({ onLogin }: AuthProps) => {
         throw new Error(data.message || "Erreur lors de la connexion");
       }
 
-      console.log("[LOGIN] data from backend:", data);
-      console.log("[LOGIN] role :", data.user.role);
+      // console.log("[LOGIN] data from backend:", data);
+      // console.log("[LOGIN] role :", data.user.role);
       // ✅ Sauvegarder le token
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
