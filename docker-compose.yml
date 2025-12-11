@@ -26,9 +26,20 @@ services:
     volumes:
       - ./certbot-html:/var/www/certbot
       - ./certbot-etc:/etc/letsencrypt
-    command: certonly --webroot --webroot-path=/var/www/certbot \
-      --email odooahmed64@gmail.com --agree-tos --no-eff-email --non-interactive \
-      -d cartevv.com -d www.cartevv.com
+    command:
+      - certbot
+      - certonly
+      - --webroot
+      - --webroot-path=/var/www/certbot
+      - --email=odooahmed64@gmail.com
+      - --agree-tos
+      - --no-eff-email
+      - --non-interactive
+      - -d
+      - cartevv.com
+      - -d
+      - www.cartevv.com
+
 # Plus de DB locale
 # Plus de phpMyAdmin local
 
