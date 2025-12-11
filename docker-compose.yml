@@ -20,8 +20,17 @@ services:
     environment:
       VITE_API_URL: "http://backend:4000"
 
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot-etc:/etc/letsencrypt
+      - ./certbot-var:/var/lib/letsencrypt
+    command : certonly --webroot --webroot-path=/var/lib/letsencrypt --email odooahmed64@gmail.com --agree-tos --no-eff-email --non-interactive --keep-until-expiring -d  cartevv.com -d www.cartevv.com
 # Plus de DB locale
 # Plus de phpMyAdmin local
 
 volumes:
   db_data:
+  certbot-etc:
+  certbot-var:
