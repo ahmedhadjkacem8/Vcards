@@ -26,12 +26,6 @@ services:
     volumes:
       - ./certbot-html:/var/www/certbot
       - ./certbot-etc:/etc/letsencrypt
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot-html:/var/www/certbot
-      - ./certbot-etc:/etc/letsencrypt
     command:
       - certonly
       - --webroot
