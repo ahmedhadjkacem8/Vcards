@@ -1,3 +1,5 @@
+#version: "3.9"
+
 services:
   backend:
     build: ./backend
@@ -5,11 +7,13 @@ services:
     restart: unless-stopped
     env_file: ./backend/.env
     ports:
-      - "4000:4000"
+      - "4000:4000" # accessible uniquement via Nginx ou IP publique
     volumes:
       - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
     command: >
-      sh -c "npm start"
+      sh -c "until nc -z db 3306; do echo 'Waiting for MySQL...'; sleep 2; done; npm start"
 
   frontend:
     build: ./frontend
@@ -18,44 +22,33 @@ services:
     ports:
       - "80:80"
     environment:
+      # Le frontend doit pointer vers le backend via le nom de service interne dans Docker Compose
       VITE_API_URL: "http://backend:4000"
 
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot-html:/var/www/certbot
-      - ./certbot-etc:/etc/letsencrypt
-    command:
-      - certonly
-      - --webroot
-      - --webroot-path=/var/www/certbot
-      - --email=odooahmed64@gmail.com
-      - --agree-tos
-      - --no-eff-email
-      - --non-interactive
-      - -d
-      - cartevv.com
-      - -d
-      - www.cartevv.com
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./frontend/build:/usr/share/nginx/html
-      - ./certbot-html:/var/www/certbot
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - frontend
-      - backend
+  # db:
+  #   image: mysql:8.0
+  #   container_name: vcards-db
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: db_vcards
+  #   ports:
+  #     - "3306:3306"  # 3306 standard pour MySQL
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+  #     - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql
 
-# Plus de DB locale
-# Plus de phpMyAdmin local
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: vcards-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
 
 volumes:
   db_data:
-  certbot-etc:
-  certbot-var:
