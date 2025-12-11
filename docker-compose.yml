@@ -15,45 +15,12 @@ services:
     build: ./frontend
     container_name: frontend
     restart: unless-stopped
-    environment:
-      VITE_API_URL: "http://backend:4000"
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot-html:/var/www/certbot
-      - ./certbot-etc:/etc/letsencrypt
-    command:
-      - certonly
-      - --webroot
-      - --webroot-path=/var/www/certbot
-      - --email=odooahmed64@gmail.com
-      - --agree-tos
-      - --no-eff-email
-      - --non-interactive
-      - -d
-      - cartevv.com
-      - -d
-      - www.cartevv.com
-  nginx:
-    image: nginx:latest
-    container_name: nginx
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ./frontend/build:/usr/share/nginx/html
-      - ./certbot-html:/var/www/certbot
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - frontend
-      - backend
-
+    environment:
+      VITE_API_URL: "http://backend:4000"
 # Plus de DB locale
 # Plus de phpMyAdmin local
 
 volumes:
   db_data:
-  certbot-etc:
-  certbot-var:
