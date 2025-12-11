@@ -1,4 +1,4 @@
-version: "3.9"
+#version: "3.9"
 
 services:
   backend:
@@ -25,18 +25,18 @@ services:
       # Le frontend doit pointer vers le backend via le nom de service interne dans Docker Compose
       VITE_API_URL: "http://backend:4000"
 
-  db:
-    image: mysql:8.0
-    container_name: vcards-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: db_vcards
-    ports:
-      - "3306:3306"  # 3306 standard pour MySQL
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql
+  # db:
+  #   image: mysql:8.0
+  #   container_name: vcards-db
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: db_vcards
+  #   ports:
+  #     - "3306:3306"  # 3306 standard pour MySQL
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+  #     - ./db_vcards.sql:/docker-entrypoint-initdb.d/db_vcards.sql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

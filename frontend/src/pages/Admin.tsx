@@ -39,6 +39,12 @@ const Admin = () => {
   const [profileVisibilityFilter, setProfileVisibilityFilter] = useState("all");
   const [profileStatusFilter, setProfileStatusFilter] = useState("all");
 
+  // State for company-profiles filtering (profiles with type 'company')
+  const [companyProfileSearch, setCompanyProfileSearch] = useState("");
+  const [companyProfileTierFilter, setCompanyProfileTierFilter] = useState("all");
+  const [companyProfileVisibilityFilter, setCompanyProfileVisibilityFilter] = useState("all");
+  const [companyProfileStatusFilter, setCompanyProfileStatusFilter] = useState("all");
+
   // State for companies filtering
   const [companySearch, setCompanySearch] = useState("");
   const [companyStatusFilter, setCompanyStatusFilter] = useState("all");
@@ -102,15 +108,29 @@ const Admin = () => {
     } catch (err: any) { toast.error(err.message); }
   };
 
-  const filteredProfiles = useMemo(() => profiles.filter(p => {
+  // filtered user profiles (type != 'company')
+  const filteredUserProfiles = useMemo(() => profiles.filter(p => {
+    if (p.type === 'company') return false;
     const search = profileSearch.toLowerCase();
-    const nameMatch = p.display_name.toLowerCase().includes(search);
+    const nameMatch = (p.display_name || "").toLowerCase().includes(search);
     const emailMatch = (p.email || "").toLowerCase().includes(search);
     const tierMatch = profileTierFilter === "all" || p.tier === profileTierFilter;
     const visibilityMatch = profileVisibilityFilter === "all" || p.visibility === profileVisibilityFilter;
     const statusMatch = profileStatusFilter === "all" || (p.is_banned ? "banned" : "active") === profileStatusFilter;
     return (nameMatch || emailMatch) && tierMatch && visibilityMatch && statusMatch;
   }), [profiles, profileSearch, profileTierFilter, profileVisibilityFilter, profileStatusFilter]);
+
+  // filtered company profiles (type === 'company')
+  const filteredCompanyProfiles = useMemo(() => profiles.filter(p => {
+    if (p.type !== 'company') return false;
+    const search = companyProfileSearch.toLowerCase();
+    const nameMatch = (p.display_name || "").toLowerCase().includes(search);
+    const emailMatch = (p.email || "").toLowerCase().includes(search);
+    const tierMatch = companyProfileTierFilter === "all" || p.tier === companyProfileTierFilter;
+    const visibilityMatch = companyProfileVisibilityFilter === "all" || p.visibility === companyProfileVisibilityFilter;
+    const statusMatch = companyProfileStatusFilter === "all" || (p.is_banned ? "banned" : "active") === companyProfileStatusFilter;
+    return (nameMatch || emailMatch) && tierMatch && visibilityMatch && statusMatch;
+  }), [profiles, companyProfileSearch, companyProfileTierFilter, companyProfileVisibilityFilter, companyProfileStatusFilter]);
 
   const filteredCompanies = useMemo(() => companies.filter(c => {
     const search = companySearch.toLowerCase();
@@ -141,10 +161,10 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-12">
 
-        {/* TABLE PROFILS */}
+        {/* TABLE PROFILS UTILISATEURS */}
         <div className="overflow-x-auto rounded-xl shadow-lg bg-white/10 backdrop-blur-md">
-          <h2 className="text-xl font-bold p-4">Profils ({filteredProfiles.length})</h2>
-          
+          <h2 className="text-xl font-bold p-4">Profils Utilisateurs ({filteredUserProfiles.length})</h2>
+
           <div className="p-4 flex gap-4 flex-wrap items-center">
             <Input 
               placeholder="Rechercher par nom ou email..."
@@ -191,7 +211,100 @@ const Admin = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProfiles.map((p) => (
+              {filteredUserProfiles.map((p) => (
+                <tr key={p.id} className="hover:bg-white/10">
+                  <td className="px-6 py-2 font-semibold">{p.display_name}</td>
+                  <td className="px-6 py-2">{p.email || "-"}</td>
+
+                  <td className="px-6 py-2">
+                    <Select value={p.tier} onValueChange={(v) => updateProfile(p.id, { tier: v })}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="premium"><span className="flex items-center gap-1"><Crown className="w-4 h-4" />Premium</span></SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+
+                  <td className="px-6 py-2">
+                    <Select value={p.visibility} onValueChange={(v) => updateProfile(p.id, { visibility: v })}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public"><span className="flex items-center gap-1"><Eye className="w-4 h-4" />Public</span></SelectItem>
+                        <SelectItem value="floux"><span className="flex items-center gap-1"><EyeOff className="w-4 h-4" />Floux</span></SelectItem>
+                        <SelectItem value="private"><span className="flex items-center gap-1"><EyeOff className="w-4 h-4" />Privé</span></SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+
+                  <td className="px-6 py-2">{p.is_banned ? <Badge variant="destructive">Banni</Badge> : <Badge>Actif</Badge>}</td>
+
+                  <td className="px-6 py-2 flex gap-2 flex-wrap">
+                    <Button size="sm" variant={p.is_banned ? "default" : "destructive"} onClick={() => updateProfile(p.id, { is_banned: !p.is_banned })}>
+                      {p.is_banned ? <Check className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                    </Button>
+
+                    <Button size="sm" variant="secondary" onClick={() => setQrProfileId(p.id)}>
+                      QR Code
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* TABLE PROFILS SOCIETES (profiles with type 'company') */}
+        <div className="overflow-x-auto rounded-xl shadow-lg bg-white/10 backdrop-blur-md mt-8">
+          <h2 className="text-xl font-bold p-4">Profils Sociétés ({filteredCompanyProfiles.length})</h2>
+
+          <div className="p-4 flex gap-4 flex-wrap items-center">
+            <Input 
+              placeholder="Rechercher par nom ou email..."
+              value={companyProfileSearch}
+              onChange={e => setCompanyProfileSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select value={companyProfileTierFilter} onValueChange={setCompanyProfileTierFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les tiers</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={companyProfileVisibilityFilter} onValueChange={setCompanyProfileVisibilityFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les visibilités</SelectItem>
+                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="floux">Floux</SelectItem>
+                <SelectItem value="private">Privé</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={companyProfileStatusFilter} onValueChange={setCompanyProfileStatusFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="banned">Banni</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-200/30">
+              <tr>
+                <th className="px-6 py-3 text-left">Nom</th>
+                <th className="px-6 py-3 text-left">Email</th>
+                <th className="px-6 py-3 text-left">Tier</th>
+                <th className="px-6 py-3 text-left">Visibilité</th>
+                <th className="px-6 py-3 text-left">Statut</th>
+                <th className="px-6 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCompanyProfiles.map((p) => (
                 <tr key={p.id} className="hover:bg-white/10">
                   <td className="px-6 py-2 font-semibold">{p.display_name}</td>
                   <td className="px-6 py-2">{p.email || "-"}</td>
