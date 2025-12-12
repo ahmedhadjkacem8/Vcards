@@ -1,23 +1,14 @@
 # Étape 1 : builder le frontend
 FROM node:20-alpine AS builder
-
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm install
-
 COPY . .
 RUN npm run build
 
 # Étape 2 : image Nginx pour servir le frontend
 FROM nginx:alpine
-
-# Copier le build depuis le conteneur builder
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copier configuration Nginx personnalisée (si tu en as)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
