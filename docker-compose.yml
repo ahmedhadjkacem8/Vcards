@@ -4,23 +4,41 @@ services:
     container_name: backend
     restart: unless-stopped
     env_file: ./backend/.env
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     volumes:
       - ./backend/uploads:/app/uploads
-    command: >
-      sh -c "npm start"
+    command: sh -c "npm start"
 
   frontend:
     build: ./frontend
     container_name: frontend
     restart: unless-stopped
+    # Le build sera copié dans /usr/share/nginx/html
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
     ports:
       - "80:80"
-    environment:
-      VITE_API_URL: "http://backend:4000"
-# Plus de DB locale
-# Plus de phpMyAdmin local
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+      - ./frontend/dist:/usr/share/nginx/html
+    depends_on:
+      - backend
+      - frontend
 
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
 volumes:
   db_data:
