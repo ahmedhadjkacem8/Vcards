@@ -25,33 +25,53 @@ export const addLocalization = async (req: Request, res: Response) => {
       });
     }
 
-    // Validate payload: either maps_link provided OR both latitude and longitude
-    const { maps_link, latitude, longitude } = req.body as {
+    const { maps_link, latitude, longitude, address, is_primary } = req.body as {
       maps_link?: string;
       latitude?: number | string;
       longitude?: number | string;
+      address: string;
+      is_primary: boolean;
     };
 
-    const payload: any = { ...req.body, profile_id: profileId };
+    const payload: any = {
+      profile_id: profileId,
+      address,
+      is_primary,
+    };
 
-    if (maps_link) {
-      // try to resolve maps link server-side to extract coords
-      const resolved = await resolveMapsLink(maps_link);
+    // Case 1: maps_link is provided
+    if (maps_link && typeof maps_link === 'string' && maps_link.trim().length > 0) {
+      payload.maps_link = maps_link.trim();
+      
+      if (!payload.address) {
+          payload.address = payload.maps_link;
+      }
+
+      const resolved = await resolveMapsLink(payload.maps_link);
       if (resolved) {
         payload.latitude = resolved.lat;
         payload.longitude = resolved.lon;
-      } else {
-        // keep maps_link only; latitude/longitude remain null
-        // do not fail creation — frontend will show external link fallback
       }
-    } else {
-      const lat = latitude !== undefined ? parseFloat(String(latitude)) : NaN;
-      const lon = longitude !== undefined ? parseFloat(String(longitude)) : NaN;
+    } 
+    // Case 2: latitude and longitude are provided
+    else if (latitude !== undefined && longitude !== undefined) {
+      const lat = parseFloat(String(latitude));
+      const lon = parseFloat(String(longitude));
+
       if (Number.isNaN(lat) || Number.isNaN(lon)) {
-        return res.status(400).json({ message: 'Provide either a valid `maps_link` or both `latitude` and `longitude`.' });
+        return res.status(400).json({ message: 'When providing coordinates, `latitude` and `longitude` must be valid numbers.' });
       }
+      
+      if (!address) {
+           return res.status(400).json({ message: '`address` is required when providing coordinates.' });
+      }
+
       payload.latitude = lat;
       payload.longitude = lon;
+    } 
+    // Case 3: Invalid payload
+    else {
+      return res.status(400).json({ message: 'Provide either a valid `maps_link` or both `latitude` and `longitude`.' });
     }
 
     const localization = await ProfileLocalization.create(payload);
