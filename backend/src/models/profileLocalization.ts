@@ -2,27 +2,26 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/db';
 import { Profile } from './profile';
 
-
 interface ProfileLocalizationAttributes {
   id: string;
   profile_id: string;
-  address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  google_maps_link: string | null;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_primary: boolean;
+  maps_link?: string | null;
 }
 
-interface ProfileLocalizationCreationAttributes extends Optional<ProfileLocalizationAttributes, 'id' | 'is_primary' | 'address' | 'latitude' | 'longitude' | 'google_maps_link'> {}
+interface ProfileLocalizationCreationAttributes extends Optional<ProfileLocalizationAttributes, 'id' | 'is_primary' | 'maps_link' | 'latitude' | 'longitude'> {}
 
 class ProfileLocalization extends Model<ProfileLocalizationAttributes, ProfileLocalizationCreationAttributes> implements ProfileLocalizationAttributes {
   public id!: string;
   public profile_id!: string;
-  public address!: string | null;
-  public latitude!: number | null;
-  public longitude!: number | null;
-  public google_maps_link!: string | null;
+  public address!: string;
+  public latitude?: number | null;
+  public longitude?: number | null;
   public is_primary!: boolean;
+  public maps_link?: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -46,7 +45,7 @@ ProfileLocalization.init(
     },
     address: {
       type: DataTypes.STRING(255),
-      allowNull: true,
+      allowNull: false,
     },
     latitude: {
       type: DataTypes.DECIMAL(10, 8),
@@ -56,13 +55,13 @@ ProfileLocalization.init(
       type: DataTypes.DECIMAL(11, 8),
       allowNull: true,
     },
-    google_maps_link: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     is_primary: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+    },
+    maps_link: {
+      type: DataTypes.STRING(512),
+      allowNull: true,
     }
   },
   {
