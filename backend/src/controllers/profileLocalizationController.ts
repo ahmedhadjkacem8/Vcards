@@ -1,18 +1,11 @@
 import { Request, Response } from "express";
 import { Profile } from "../models";
 import ProfileLocalization from "../models/profileLocalization";
+import resolveMapsLink from "../utils/mapsResolver";
 
 export const addLocalization = async (req: Request, res: Response) => {
   try {
     const profileId = req.params.profile_id;
-    const { address, latitude, longitude, google_maps_link, is_primary } = req.body;
-
-    // Validate that either google_maps_link or both latitude and longitude are provided
-    if (!google_maps_link && (!latitude || !longitude)) {
-      return res.status(400).json({
-        message: "You must provide either a Google Maps link or both latitude and longitude.",
-      });
-    }
 
     // 1. Check if the profile exists
     const profile = await Profile.findByPk(profileId);
@@ -32,14 +25,36 @@ export const addLocalization = async (req: Request, res: Response) => {
       });
     }
 
-    const localization = await ProfileLocalization.create({
-      profile_id: profileId,
-      address,
-      latitude,
-      longitude,
-      google_maps_link,
-      is_primary,
-    });
+    // Validate payload: either maps_link provided OR both latitude and longitude
+    const { maps_link, latitude, longitude } = req.body as {
+      maps_link?: string;
+      latitude?: number | string;
+      longitude?: number | string;
+    };
+
+    const payload: any = { ...req.body, profile_id: profileId };
+
+    if (maps_link) {
+      // try to resolve maps link server-side to extract coords
+      const resolved = await resolveMapsLink(maps_link);
+      if (resolved) {
+        payload.latitude = resolved.lat;
+        payload.longitude = resolved.lon;
+      } else {
+        // keep maps_link only; latitude/longitude remain null
+        // do not fail creation — frontend will show external link fallback
+      }
+    } else {
+      const lat = latitude !== undefined ? parseFloat(String(latitude)) : NaN;
+      const lon = longitude !== undefined ? parseFloat(String(longitude)) : NaN;
+      if (Number.isNaN(lat) || Number.isNaN(lon)) {
+        return res.status(400).json({ message: 'Provide either a valid `maps_link` or both `latitude` and `longitude`.' });
+      }
+      payload.latitude = lat;
+      payload.longitude = lon;
+    }
+
+    const localization = await ProfileLocalization.create(payload);
 
     res.json(localization);
   } catch (err) {
@@ -63,28 +78,13 @@ export const getLocalizations = async (req: Request, res: Response) => {
 export const updateLocalization = async (req: Request, res: Response) => {
   try {
     const { localization_id } = req.params;
-    const { address, latitude, longitude, google_maps_link, is_primary } = req.body;
-
-    // Validate that either google_maps_link or both latitude and longitude are provided
-    if (!google_maps_link && (!latitude || !longitude)) {
-      return res.status(400).json({
-        message: "You must provide either a Google Maps link or both latitude and longitude.",
-      });
-    }
-
     const localization = await ProfileLocalization.findByPk(localization_id);
 
     if (!localization) {
       return res.status(404).json({ message: "Localization not found" });
     }
 
-    await localization.update({
-      address,
-      latitude,
-      longitude,
-      google_maps_link,
-      is_primary,
-    });
+    await localization.update(req.body);
     res.json(localization);
   } catch (err) {
     console.error(err);
@@ -106,34 +106,5 @@ export const deleteLocalization = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-export const expandUrl = async (req: Request, res: Response) => {
-  try {
-    const { url } = req.body;
-
-    if (!url) {
-      return res.status(400).json({ message: "Le champ 'url' est requis." });
-    }
-
-    // Vérifie si c'est un lien raccourci
-    if (!url.includes("goo.gl")) {
-      return res.status(400).json({ message: "Le lien fourni n'est pas un lien raccourci Google." });
-    }
-
-    // Suivre la redirection pour obtenir l'URL finale
-    const response = await fetch(url, {
-      method: "HEAD",  // HEAD suffit pour suivre la redirection
-      redirect: "follow",
-    });
-
-    const finalUrl = response.url;
-
-    res.json({ finalUrl });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ message: error.message || "Impossible d'étendre le lien." });
   }
 };

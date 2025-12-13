@@ -393,24 +393,76 @@ const Profile = () => {
                     return `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.05}%2C${lat - 0.025}%2C${lon + 0.05}%2C${lat + 0.025}&amp;layer=mapnik&amp;marker=${lat}%2C${lon}`;
                 };
 
+                const extractCoords = (link: string) => {
+                  try {
+                    const at = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                    if (at) return { lat: parseFloat(at[1]), lon: parseFloat(at[2]) };
+                    const q = link.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+                    if (q) return { lat: parseFloat(q[1]), lon: parseFloat(q[2]) };
+                    const ex = link.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+                    if (ex) return { lat: parseFloat(ex[1]), lon: parseFloat(ex[2]) };
+                    const pair = link.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+                    if (pair) return { lat: parseFloat(pair[1]), lon: parseFloat(pair[2]) };
+                  } catch (e) {
+                    return null;
+                  }
+                  return null;
+                };
+
                 return (
                     <div>
                         {primaryLocalization && (
                             <div className="mb-4">
-                                <iframe
+                                {(
+                                  (primaryLocalization.latitude !== null && primaryLocalization.latitude !== undefined && primaryLocalization.longitude !== null && primaryLocalization.longitude !== undefined)
+                                ) ? (
+                                  <iframe
                                     width="100%"
                                     height="300"
                                     src={getMapEmbedUrl(primaryLocalization.latitude, primaryLocalization.longitude)}
                                     style={{ border: "1px solid black", borderRadius: "0.375rem" }}
                                     title="Map Preview"
-                                ></iframe>
+                                  ></iframe>
+                                ) : primaryLocalization.maps_link ? (
+                                  (() => {
+                                    const coords = extractCoords(primaryLocalization.maps_link as string);
+                                    if (coords) {
+                                      return (
+                                        <iframe
+                                          width="100%"
+                                          height="300"
+                                          src={getMapEmbedUrl(coords.lat, coords.lon)}
+                                          style={{ border: "1px solid black", borderRadius: "0.375rem" }}
+                                          title="Map Preview"
+                                        ></iframe>
+                                      );
+                                    }
+                                    return (
+                                      <div className="h-48 bg-gray-100 rounded-md flex flex-col items-center justify-center p-4 text-center">
+                                        <p className="mb-2">Impossible d'afficher l'aperçu intégré pour ce lien Google Maps.</p>
+                                        <a
+                                          href={primaryLocalization.maps_link as string}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md"
+                                        >
+                                          Ouvrir la carte dans Google Maps
+                                        </a>
+                                      </div>
+                                    );
+                                  })()
+                                ) : (
+                                  <div className="h-48 bg-gray-100 rounded-md flex items-center justify-center p-4 text-center">
+                                    <p className="text-muted-foreground">Aucune coordonnée disponible pour l'aperçu.</p>
+                                  </div>
+                                )}
                             </div>
                         )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {localizations.map((loc) => (
                                 <a
                                     key={loc.id}
-                                    href={`https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`}
+                                    href={loc.maps_link ? loc.maps_link : `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-4 p-4 border rounded-md hover:bg-gray-100/50"
